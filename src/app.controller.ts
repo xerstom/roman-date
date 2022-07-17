@@ -1,4 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, HttpStatus, Query, Res } from '@nestjs/common';
+import { Response } from 'express';
 import {
   ApiExtraModels,
   ApiOperation,
@@ -7,20 +8,14 @@ import {
 } from '@nestjs/swagger';
 import { AppService } from './app.service';
 import { DateValidation } from './dto/DateValidation.dto';
-// import { WeatherParams } from './dto/WeatherParams.dto';
+import { WeatherParams } from './dto/WeatherParams.dto';
+import { WeatherResponse } from './model/WeatherResponse';
 
 @ApiTags('Roman Converter')
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  // @Get('roman')
-  // async getRomanDate(@Query() query: DateValidation): Promise<string> {
-  //   console.log(query.date);
-  //   const date = this.appService.getRomanDate(query.date);
-  //   return this.appService.getWeatherFromDate(new WeatherParams(query.date));
-  // }
-  @Get('roman')
   @ApiOperation({
     summary:
       'Sends back date converted to roman date and the temperature of Paris at this date',
@@ -34,8 +29,18 @@ export class AppController {
     status: 400,
     description: 'date must be a Date instance',
   })
-  getRomanDate(@Query() query: DateValidation): string {
-    console.log(query.date);
-    return this.appService.getRomanDate(query.date);
+  @Get('roman')
+  async getRomanDate(
+    @Query() query: DateValidation,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ date: string; temps: WeatherResponse }> {
+    const date: string = this.appService.getRomanDate(query.date);
+    const { temps, error } = await this.appService.getWeatherFromDate(
+      new WeatherParams(query.date),
+    );
+    if (error != 0) {
+      res.status(HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+    return { date, temps };
   }
 }

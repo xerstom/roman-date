@@ -1,20 +1,21 @@
-import { Transform } from 'class-transformer';
-import { IsDate } from 'class-validator';
-import { weather } from '../secret.template.json';
+import { ApiProperty } from '@nestjs/swagger';
+import { weather } from '../secret.json';
 
 export class WeatherParams {
-  @Transform(({ value }) => new Date(value))
-  @IsDate()
-  dt: Date;
+  @ApiProperty()
+  dt: string;
 
+  @ApiProperty()
   lat: number;
 
+  @ApiProperty()
   long: number;
 
+  @ApiProperty()
   appid: string;
 
   constructor(_dt: Date) {
-    this.dt = _dt;
+    this.dt = _dt ? _dt.toISOString() : '0000-01-01';
     this.lat = weather?.lat;
     this.long = weather?.long;
     this.appid = weather?.key;

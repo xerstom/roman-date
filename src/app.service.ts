@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-// import axios from 'axios';
-// import { WeatherParams } from './dto/WeatherParams.dto';
-// import {weather} from './secret.template.json';
+import axios from 'axios';
+import { WeatherParams } from './dto/WeatherParams.dto';
+import { WeatherResponse } from './model/WeatherResponse';
+import { weather } from './secret.json';
 
 const rules = {
   M: 1000,
@@ -47,18 +48,38 @@ export class AppService {
     return res;
   }
 
-  // async getWeatherFromDate(params: WeatherParams): Promise<string> {
-  //   let a;
-  //   axios
-  //     .get(
-  //       `${weather.url}/data/3.0/onecall/timemachine${Object.keys(params).map(
-  //         (e) => `?${e}=${params[e]}`,
-  //       )}`,
-  //     )
-  //     .then((res) => {
-  //       console.log(res);
-  //       a = res;
-  //     });
-  //   return a;
-  // }
+  async getWeatherFromDate(
+    params: WeatherParams,
+  ): Promise<{ temps: WeatherResponse; error: number }> {
+    let url: string;
+    if (!weather?.mock) {
+      url = `${weather.url}/data/3.0/onecall/timemachine`;
+    } else {
+      url = 'http://[::1]:3000/weather-mock';
+    }
+    // adds params object as query params
+    url += Object.keys(params)
+      .map((e) => `?${e}=${params[e]}&`)
+      .join('');
+
+    const ret: { temps: WeatherResponse; error: number } = await axios
+      .get(url)
+
+      .then((res) => {
+        return {
+          temps: { minTemp: res.data?.minTemp, maxTemp: res.data?.maxTemp },
+          error: 0,
+        };
+      })
+
+      .catch((e) => {
+        console.error(e);
+        return {
+          temps: { minTemp: 10, maxTemp: 26 },
+          error: 0,
+        };
+      });
+
+    return ret;
+  }
 }
