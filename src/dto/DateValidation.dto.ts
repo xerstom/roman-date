@@ -1,9 +1,11 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
 import { IsDate } from 'class-validator';
 
 export class DateValidation {
   @Transform(({ value }) => new Date(value))
   @IsDate()
+  @ApiProperty()
   date: Date;
 
   /** Creates a DataValidation from string
